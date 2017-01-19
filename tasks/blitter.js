@@ -6,7 +6,7 @@ var path = require('path');
  * @function isInvalidFile
  * @param {String} file
  * @param {Object} stats
- * return {Boolean}
+ * @return {Boolean}
  * @api private
  */
 

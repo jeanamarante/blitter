@@ -62,7 +62,7 @@ function scanHTMLNode (node) {
  * @function createBlob
  * @param {String} mime
  * @param {String} dataURI
- * return {Blob}
+ * @return {Blob}
  * @api private
  */
 
