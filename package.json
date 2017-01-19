@@ -1,0 +1,32 @@
+{
+    "name": "blitter",
+    "description": "Sprite Sheet Helper for the Web",
+    "version": "0.3.0",
+    "author": {
+        "name": "Jean Amarante",
+        "url": "https://github.com/jeanamarante"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jeanamarante/blitter"
+    },
+    "bugs": {
+        "url": "https://github.com/jeanamarante/blitter/issues"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=0.10.0"
+    },
+    "dependencies": {
+        "mv": "^2.1.1",
+        "grunt": "^0.4.0",
+        "datauri": "^0.8.0",
+        "recursive-readdir": "^2.1.0"
+    },
+    "keywords": [
+        "blitter",
+        "grunt",
+        "plugin",
+        "spritesheet"
+    ]
+}
