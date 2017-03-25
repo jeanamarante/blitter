@@ -1,7 +1,7 @@
 {
     "name": "blitter",
     "description": "Sprite Sheet Helper for the Web",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "author": {
         "name": "Jean Amarante",
         "url": "https://github.com/jeanamarante"
@@ -18,8 +18,8 @@
         "node": ">=0.10.0"
     },
     "dependencies": {
-        "grunt": "^0.4.0",
-        "datauri": "^0.8.0",
+        "grunt": "^1.0.0",
+        "datauri": "^1.0.0",
         "recursive-readdir": "^2.1.0"
     },
     "keywords": [
