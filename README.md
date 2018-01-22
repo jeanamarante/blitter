@@ -124,6 +124,12 @@ You should never call this method directly. All generated sprite buffers invoke 
 
 _loadSpriteBuffer(buffer: Object);_
 
+### BLITTER.getBlob
+
+Get the raw data of frames. Blobs are only created when using object URLs.
+
+_getBlob(id: String);_
+
 ### BLITTER.getImageData
 
 Get frames after load event fires.
