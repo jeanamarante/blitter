@@ -106,6 +106,12 @@ If set to true, the sprite buffer will be wrapped around a ```<script>``` tag.
 
 blit-ids are declared as attributes inside ```<img>``` tags. They serve as pointers to the frame you want to render. File names are used for blit-ids. For example, if you have a file in the src directory named example-icon.svg, the blit-id for that file will be example-icon.
 
+### BLITTER.hasBlob
+
+Check if blob exists.
+
+_hasBlob(id: String);_
+
 ### BLITTER.hasImageData
 
 Check if frame exists.
@@ -126,7 +132,7 @@ _loadSpriteBuffer(buffer: Object);_
 
 ### BLITTER.getBlob
 
-Get the raw data of frames. Blobs are only created when using object URLs.
+Get the raw data of frames after load event fires. Blobs are only created when using object URLs.
 
 _getBlob(id: String);_
 
