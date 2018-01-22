@@ -11,10 +11,24 @@ var queue = [];
 var frames = {};
 
 // Store image data.
-var imageData = {};
+var imageDataStorage = {};
+
+// Store blobs.
+var blobStorage = {};
 
 // Reference image data as ObjectURLs?
-var useURLs = false;
+var usingObjectURLs = false;
+
+/**
+ * @function hasImageData
+ * @param {String} id
+ * @return {Boolean}
+ * @api private
+ */
+
+function hasImageData (id) {
+    return imageDataStorage[id] !== undefined;
+}
 
 /**
  * Query all img nodes in DOM.
@@ -24,7 +38,7 @@ var useURLs = false;
  */
 
 function queryDOM () {
-    var nodes = document.body.querySelectorAll('img');
+    var nodes = document.body.querySelectorAll('img[blit-id]');
 
     for (var i = 0, max = nodes.length; i < max; i++) {
         scanHTMLNode(nodes[i]);
@@ -40,16 +54,13 @@ function queryDOM () {
 function scanHTMLNode (node) {
     var id = node.getAttribute('blit-id');
 
-    // img elements without a valid blit-id are ignored.
-    if (!id) { return undefined; }
-
-    if (!frames[id]) {
+    if (frames[id] !== undefined) {
+        frames[id].push(node);
+    } else {
         frames[id] = [node];
 
         // Only push unique ids.
         queue.push(id);
-    } else {
-        frames[id].push(node);
     }
 
     // Setting an empty png in src prevents default borders from rendering while loading the page.
@@ -60,13 +71,14 @@ function scanHTMLNode (node) {
  * Create Blob from the dataURI.
  *
  * @function createBlob
+ * @param {String} id
  * @param {String} mime
  * @param {String} dataURI
  * @return {Blob}
  * @api private
  */
 
-function createBlob (mime, dataURI) {
+function createBlob (id, mime, dataURI) {
     var content = [];
 
     // Decode the dataURI.
@@ -76,21 +88,26 @@ function createBlob (mime, dataURI) {
         content[i] = data.charCodeAt(i);
     }
 
-    return new Blob([new Uint8Array(content)], { type: mime });
+    var blob = new Blob([new Uint8Array(content)], { type: mime });
+
+    blobStorage[id] = blob;
+
+    return blob;
 }
 
 /**
  * Create ObjectURL from the Blob.
  *
  * @function createObjectURL
+ * @param {String} id
  * @param {String} mime
  * @param {String} dataURI
  * @return {String}
  * @api private
  */
 
-function createObjectURL (mime, dataURI) {
-    var blob = createBlob(mime, dataURI);
+function createObjectURL (id, mime, dataURI) {
+    var blob = createBlob(id, mime, dataURI);
 
     return URL.createObjectURL(blob);
 }
@@ -113,14 +130,14 @@ function checkQueue () {
     for (var i = 0; i < max; i++) {
         var id = queue[i];
 
-        if (hasImageData(id)) {
+        if (!hasImageData(id)) {
+            // Recycle id for next iteration.
+            newQueue.push(id);
+        } else {
             appendImageDataToNodes(id);
 
             // Discard nodes.
             frames[id] = undefined;
-        } else {
-            // Recycle id for next iteration.
-            newQueue.push(id);
         }
     }
 
@@ -135,26 +152,29 @@ function checkQueue () {
  */
 
 function appendImageDataToNodes (id) {
-    var data = imageData[id];
     var nodes = frames[id];
+
+    if (nodes === undefined) { return undefined; }
+
+    var data = imageDataStorage[id];
 
     for (var i = 0, max = nodes.length; i < max; i++) {
         nodes[i].src = data;
     }
 }
 
-/**
- * @function hasImageData
- * @param {String} id
- * @return {Boolean}
- * @api private
- */
-
-function hasImageData (id) {
-    return imageData[id] !== undefined;
-}
-
 window.BLITTER = {
+    /**
+     * @function hasImageData
+     * @param {String} id
+     * @return {Boolean}
+     * @api public
+     */
+
+    hasImageData: function (id) {
+        return hasImageData(id);
+    },
+
     /**
      * Allow BLITTER to use ObjectURLs.
      *
@@ -163,7 +183,7 @@ window.BLITTER = {
      */
 
     useObjectURLs: function () {
-        useURLs = true;
+        usingObjectURLs = true;
     },
 
     /**
@@ -183,10 +203,12 @@ window.BLITTER = {
             var mime = arr[0];
             var dataURI = arr[1];
 
-            imageData[id] = useURLs ? createObjectURL(mime, dataURI) : dataURI;
+            if (imageDataStorage[id] === undefined) {
+                imageDataStorage[id] = usingObjectURLs ? createObjectURL(id, mime, dataURI) : dataURI;
+            }
         }
 
-        // Check queue after parsing sprite buffer.
+        // Always check queue after parsing sprite buffer.
         checkQueue();
     },
 
@@ -198,7 +220,7 @@ window.BLITTER = {
      */
 
     getImageData: function (id) {
-        return hasImageData(id) ? imageData[id] : emptyPNG;
+        return hasImageData(id) ? imageDataStorage[id] : emptyPNG;
     }
 };
 
