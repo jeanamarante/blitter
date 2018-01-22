@@ -106,21 +106,27 @@ If set to true, the sprite buffer will be wrapped around a ```<script>``` tag.
 
 blit-ids are declared as attributes inside ```<img>``` tags. They serve as pointers to the frame you want to render. File names are used for blit-ids. For example, if you have a file in the src directory named example-icon.svg, the blit-id for that file will be example-icon.
 
+### BLITTER.hasImageData
+
+Check if frame exists.
+
+_hasImageData(id: String);_
+
 ### BLITTER.useObjectURLs
 
-This will only work in modern browsers, it is recommended you only use this to save memory on big apps and not websites.
+Call this method to save memory on big apps.
 
 _useObjectURLs();_
 
 ### BLITTER.loadSpriteBuffer
 
-You should never call this method directly. All generated sprite buffers invoke this method.
+You should never call this method directly. All generated sprite buffers invoke this method by default.
 
 _loadSpriteBuffer(buffer: Object);_
 
 ### BLITTER.getImageData
 
-Get frames after initial load using blit-ids.
+Get frames after load event fires.
 
 _getImageData(id: String);_
 
