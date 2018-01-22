@@ -20,6 +20,17 @@ var blobStorage = {};
 var usingObjectURLs = false;
 
 /**
+ * @function hasBlob
+ * @param {String} id
+ * @return {Boolean}
+ * @api private
+ */
+
+function hasBlob (id) {
+    return blobStorage[id] !== undefined;
+}
+
+/**
  * @function hasImageData
  * @param {String} id
  * @return {Boolean}
@@ -165,6 +176,17 @@ function appendImageDataToNodes (id) {
 
 window.BLITTER = {
     /**
+     * @function hasBlob
+     * @param {String} id
+     * @return {Boolean}
+     * @api public
+     */
+
+    hasBlob: function (id) {
+        return hasBlob(id);
+    },
+
+    /**
      * @function hasImageData
      * @param {String} id
      * @return {Boolean}
@@ -221,6 +243,17 @@ window.BLITTER = {
 
     getImageData: function (id) {
         return hasImageData(id) ? imageDataStorage[id] : emptyPNG;
+    },
+
+    /**
+     * @function getBlob
+     * @param {String} id
+     * @return {String}
+     * @api public
+     */
+
+    getBlob: function (id) {
+        return hasBlob(id) ? blobStorage[id] : null;
     }
 };
 
