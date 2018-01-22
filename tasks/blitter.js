@@ -37,6 +37,12 @@ function isInvalidFile (file, stats) {
  */
 
 function recurseSrc (grunt, task) {
+    if (typeof task.data.src !== 'string' || typeof task.data.dest !== 'string') {
+        return undefined;
+    } else if (!grunt.file.isDir(task.data.src)) {
+        return undefined;
+    }
+
     var done = task.async();
 
     require('recursive-readdir')(task.data.src, [isInvalidFile], function (err, files) {
