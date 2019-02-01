@@ -1,111 +1,142 @@
-var path = require('path');
+const path = require('path');
+const klaw = require('klaw-sync');
+const isImage = require('is-image');
+const DataURI = require('datauri');
 
 /**
- * Only images are allowed to be added into files list.
+ * Ignore everything except directories and image files.
  *
- * @function isInvalidFile
+ * @function canIgnore
  * @param {String} file
  * @param {Object} stats
  * @return {Boolean}
  * @api private
  */
 
-function isInvalidFile (file, stats) {
-    // Do not block access to sub directories.
-    if (stats.isDirectory()) { return false; }
-
-    switch (path.extname(file)) {
-        case '.svg':
-        case '.png':
-        case '.gif':
-        case '.jpg':
-        case '.jpeg':
-            return false;
-
-        default:
-            return true;
-    }
+function canIgnore (file, stats) {
+    return !(stats.isDirectory() || isImage(file));
 }
 
 /**
- * Grab all of the images in the src directory recursively.
+ * Match all image files in src directories.
  *
- * @function recurseSrc
+ * @function recurseSrcDirectories
  * @param {Object} grunt
- * @param {Object} task
+ * @param {Object} fileData
+ * @param {Object} options
  * @api private
  */
 
-function recurseSrc (grunt, task) {
-    if (typeof task.data.src !== 'string' || typeof task.data.dest !== 'string') {
-        return undefined;
-    } else if (!grunt.file.isDir(task.data.src)) {
-        return undefined;
+function recurseSrcDirectories (grunt, fileData, options) {
+    let matches = [];
+
+    for (let i = 0, max = fileData.src.length; i < max; i++) {
+        let src = fileData.src[i];
+
+        if (typeof src !== 'string') {
+            throw new TypeError('src must be String.');
+        }
+
+        src = path.resolve(task.data.src);
+
+        if (!grunt.file.isDir(src)) {
+            throw new Error(src + ' must be a directory.');
+        }
     }
 
-    var done = task.async();
-
-    require('recursive-readdir')(task.data.src, [isInvalidFile], function (err, files) {
-        done();
-
-        createSpriteBuffer(grunt, task, files);
-    });
+    createBuffer(grunt, fileData, options, matches);
 }
 
 /**
- * Create dataURIs from files and place them inside the sprite buffer.
- * Refer to client-side script to see how the buffer is parsed.
+ * Create dataURIs from all image files and place them inside the buffer
+ * with their respective id and MIME.
  *
- * @function createSpriteBuffer
+ * @function createBuffer
  * @param {Object} grunt
- * @param {Object} task
- * @param {Array} files
+ * @param {Object} fileData
+ * @param {Object} options
+ * @param {Array} matches
  * @api private
  */
 
-function createSpriteBuffer (grunt, task, files) {
-    var buffer = {};
-    var dataURI = require('datauri');
+function createBuffer (grunt, fileData, options, matches) {
+    let buffer = [];
 
-    for (var i = 0, max = files.length; i < max; i++) {
-        var filePath = files[i];
-        var fileName = path.parse(filePath).name;
+    for (let i = 0, max = matches.length; i < max; i++) {
+        let match = matches[i];
+        let uri = new DataURI(match);
 
-        var uri = new dataURI(filePath);
-
-        buffer[fileName] = [uri.mimetype, uri.content];
+        buffer.push(path.parse(match).name, uri.mimetype, uri.content);
     }
 
-    writeDest(grunt, task, buffer);
+    writeBufferToDest(grunt, fileData, options, buffer);
 }
 
 /**
- * Write buffer into dest file. The buffer is wrapped by the client-side
- * load method and HTML <script> tag if it is inlined.
- *
- * @function writeDest
+ * @function writeBufferToDest
  * @param {Object} grunt
- * @param {Object} task
- * @param {Object} buffer
+ * @param {Object} fileData
+ * @param {Object} options
+ * @param {Array} buffer
  * @api private
  */
 
-function writeDest (grunt, task, buffer) {
-    var content = 'BLITTER.loadSpriteBuffer(' + JSON.stringify(buffer) + ');';
-
-    if (Boolean(task.data.inline)) {
-        content = '<script type="text/javascript">' + content + '</script>';
+function writeBufferToDest (grunt, fileData, options, buffer) {
+    if (typeof fileData.dest !== 'string') {
+        throw new TypeError('dest must be a string.');
     }
 
-    grunt.file.write(task.data.dest, content);
+    // Wrap the buffer inside the parseBuffer method invocation.
+    var content = 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
+
+    // Append useObjectURLs invocation after parsing buffer.
+    if (Boolean(options.useObjectURLs)) {
+        content += 'BLITTER.useObjectURLs();';
+    }
+
+    grunt.file.write(path.resolve(fileData.dest), content);
+}
+
+/**
+ * Read dist script and uglify it to dest.
+ *
+ * @function uglifyDistScript
+ * @param {Object} grunt
+ * @param {Object} fileData
+ * @param {Object} options
+ * @api public
+ */
+
+function uglifyDistScript (grunt, fileData, options) {
+    let distScriptPath = path.resolve(__dirname, '../dist/blitter.js');
+
+    if (!grunt.file.isFile(distScriptPath)) {
+        throw new Error('blitter.js must be a file in node_modules/blitter/dist/');
+    } else if (typeof fileData.dest !== 'string') {
+        throw new TypeError('dest must be a string.');
+    }
+
+    let result = require('uglify-es').minify(grunt.file.read(distScriptPath), { mangle: false });
+
+    if (result.error !== undefined) {
+        throw result.error;
+    } else {
+        grunt.file.write(path.resolve(fileData.dest), result.code);
+    }
 }
 
 module.exports = function (grunt) {
     grunt.registerMultiTask('blitter', function () {
-        if (grunt.task.current.target === 'distScript') {
-            require('./lib/dist-script.js').writeFile(grunt, this, '../../dist/blitter.min.js');
+        let options = this.options();
+
+        if (this.target === 'distScript') {
+            for (let i = 0, max = this.files.length; i < max; i++) {
+                uglifyDistScript(grunt, this.files[i], options);
+            }
         } else {
-            recurseSrc(grunt, this);
+            for (let i = 0, max = this.files.length; i < max; i++) {
+                recurseSrcDirectories(grunt, this.files[i], options);
+            }
         }
     });
 };
