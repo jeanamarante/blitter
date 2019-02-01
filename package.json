@@ -21,7 +21,7 @@
         "grunt": "^1.0.0",
         "datauri": "^1.1.0",
         "is-image": "^2.0.0",
-        "uglify-js": "^3.4.0",
+        "uglify-es": "^3.3.0",
         "recursive-readdir": "^2.2.0"
     },
     "keywords": [
