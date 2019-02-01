@@ -257,12 +257,12 @@ window.BLITTER = {
     },
 
     /**
-     * @function parseSpriteBuffer
+     * @function parseBuffer
      * @param {Object} buffer
      * @api public
      */
 
-    parseSpriteBuffer: function (buffer) {
+    parseBuffer: function (buffer) {
         for (let i = 0, max = buffer.length; i < max; i += 3) {
             let id = buffer[i];
             let mime = buffer[i + 1];
