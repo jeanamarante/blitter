@@ -15,7 +15,7 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 grunt.loadNpmTasks('blitter');
 ```
 
-&ensp;
+&nbsp;
 
 ## Task
 
@@ -50,21 +50,21 @@ grunt.config.init({
 });
 ```
 
-#### distScript
+__distScript__
 
 Reserved target for declaring where the minified client-side script is written.
 
-#### options.useObjectURLs
+__options.useObjectURLs__  
 Type: `Boolean`  
 Default: `false`
 
 More efficient handling of image data by creating an object URL for each data URI. Blobs are created only when using object URLs.
 
-&ensp;
+&nbsp;
 
 ## Client-Side
 
-#### blit-id
+__blit-id__
 
 blit-ids are declared as attributes inside ```<img>``` elements. They serve as references to the image data you want to render. File names without their extension are used as blit-ids. All file names must be unique, if not the image elements will render the image data tied to the blit-id that got stored first.
 
@@ -78,12 +78,12 @@ srcDir
 │    │   shape-triangle.svg
 │    └─  shape-rectangle.svg
 │
-└─── file-system
-     │   file-system-directory.svg
-     └─  file-system-file.svg
+└─── user-profile
+     │   user-profile-admin.png
+     └─  user-profile-member.png
 ```
 
-#### HTML Page
+__HTML Page__
 
 Always load blitter after all of the img elements using blit-ids have been parsed. It's not a bad idea to load buffers before loading other scripts.
 
@@ -93,66 +93,80 @@ Always load blitter after all of the img elements using blit-ids have been parse
     <title>Blitter Demo</title>
 </head>
 <body>
-    <img blit-id="example-icon">
+    <img blit-id="menu-hamburger-icon">
     <ul>
-        <li><img blit-id="example-sub-icon-one"></li>
-        <li><img blit-id="example-sub-icon-two"></li>
+        <li><img blit-id="user-profile-admin"></li>
+        <li><img blit-id="user-profile-member"></li>
     </ul>
-    <script src="js/blitter.min.js"></script>
-    <script src="js/demo-buffer.blit.js"></script>
+    <script src="js/vendor/blitter.min.js"></script>
+    <script src="js/vendor/demo-buffer.blit.js"></script>
 </body>
 </html>
 ```
 
-&ensp;
+&nbsp;
 
 ## API
 
-#### hasMIME
-
-_hasMIME (id: String) : Boolean_
-
-#### getMIME
-
-_getMIME (id: String) : String_
-
-#### hasBlob
-
-_hasBlob (id: String) : Boolean_
-
-#### getBlob
-
-_getBlob (id: String) : Blob_
-
-#### hasImageData
-
-_hasImageData(id: String) : Boolean_
-
-#### getImageData
-
-_getImageData (id: String) : String_
+__hasMIME__
 
 ```js
-var img = new Image();
-var data = BLITTER.getImageData('example-icon');
+hasMIME (id: String) : Boolean
+```
 
-img.setAttribute('src', data);
+__getMIME__
+
+```js
+getMIME (id: String) : String
+```
+
+__hasBlob__
+
+```js
+hasBlob (id: String) : Boolean
+```
+
+__getBlob__
+
+```js
+getBlob (id: String) : Blob
+```
+
+__hasImageData__
+
+```js
+hasImageData (id: String) : Boolean
+```
+
+__getImageData__
+
+```js
+getImageData (id: String) : String
+
+// Example
+let img = new Image();
+
+img.setAttribute('src', BLITTER.getImageData('shape-rectangle'));
 
 document.body.appendChild(img);
 ```
 
-#### isUsingObjectURLs
+__isUsingObjectURLs__
 
-_isUsingObjectURLs () : Boolean_
+```js
+isUsingObjectURLs () : Boolean
+```
 
-#### useObjectURLs
+__useObjectURLs__
 
-_useObjectURLs ()_
+```js
+// You should never call this method directly.
+useObjectURLs ()
+```
 
-You should never call this method directly.
+__parseBuffer__
 
-#### parseBuffer
-
-_parseBuffer (buffer: Array)_
-
-You should never call this method directly.
+```js
+// You should never call this method directly.
+parseBuffer (buffer: Array)
+```
