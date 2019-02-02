@@ -109,7 +109,7 @@ function writeBufferToDest (grunt, fileData, options, buffer) {
     }
 
     // Wrap the buffer inside the parseBuffer method invocation.
-    content = 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
+    content += 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
 
     grunt.file.write(path.resolve(fileData.dest), content);
 }
