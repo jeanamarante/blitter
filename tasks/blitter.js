@@ -108,7 +108,7 @@ function writeBufferToDest (grunt, fileData, options, buffer) {
         content += 'BLITTER.useObjectURLs();';
     }
 
-    // Wrap the buffer inside the parseBuffer method invocation.
+    // Wrap the buffer inside the parseBuffer invocation.
     content += 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
 
     grunt.file.write(path.resolve(fileData.dest), content);
