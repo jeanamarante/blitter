@@ -96,14 +96,13 @@ function storeFrame (node) {
  * Create Blob from the data URI.
  *
  * @function createBlob
- * @param {String} id
  * @param {String} mime
  * @param {String} dataURI
  * @return {Blob}
  * @api private
  */
 
-function createBlob (id, mime, dataURI) {
+function createBlob (mime, dataURI) {
     let content = [];
 
     // Decode the data URI.
@@ -113,11 +112,7 @@ function createBlob (id, mime, dataURI) {
         content[i] = data.charCodeAt(i);
     }
 
-    let blob = new Blob([new Uint8Array(content)], { type: mime });
-
-    blobRegistry[id] = blob;
-
-    return blob;
+    return new Blob([new Uint8Array(content)], { type: mime });
 }
 
 /**
@@ -253,7 +248,11 @@ window.BLITTER = {
      */
 
     useObjectURLs: function () {
+        if (usingObjectURLs) { return undefined; }
+
         usingObjectURLs = true;
+
+        emptyPNG = URL.createObjectURL(createBlob('image/png', emptyPNG));
     },
 
     /**
@@ -270,7 +269,10 @@ window.BLITTER = {
 
             if (imageDataRegistry[id] === undefined) {
                 if (usingObjectURLs) {
-                    imageDataRegistry[id] = URL.createObjectURL(createBlob(id, mime, dataURI));
+                    let blob = createBlob(mime, dataURI);
+
+                    blobRegistry[id] = blob;
+                    imageDataRegistry[id] = URL.createObjectURL(blob);
                 } else {
                     imageDataRegistry[id] = dataURI;
                 }
