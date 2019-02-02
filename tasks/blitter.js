@@ -63,7 +63,7 @@ function recurseSrcDirectories (grunt, fileData, options) {
 }
 
 /**
- * Create dataURIs from all image files and place them inside the buffer
+ * Create data URIs from all image files and push them inside the buffer
  * with their respective id and MIME.
  *
  * @function createBuffer

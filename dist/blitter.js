@@ -93,7 +93,7 @@ function storeFrame (node) {
 }
 
 /**
- * Create Blob from the dataURI.
+ * Create Blob from the data URI.
  *
  * @function createBlob
  * @param {String} id
@@ -106,7 +106,7 @@ function storeFrame (node) {
 function createBlob (id, mime, dataURI) {
     let content = [];
 
-    // Decode the dataURI.
+    // Decode the data URI.
     let data = window.atob(dataURI.split(',')[1]);
 
     for (let i = 0, max = data.length; i < max; i++) {
@@ -279,13 +279,13 @@ window.BLITTER = {
             }
         }
 
-        // Always iterate queue after parsing sprite buffer.
+        // Always iterate queue after parsing the buffer.
         iterateIdQueue();
     }
 };
 
-// Query DOM immediately to prevent img elements with blit-ids from rendering
-// default border for empty src tags.
+// Query DOM immediately to prevent img elements with blit-ids and empty src
+// tags from rendering default border.
 queryDOM();
 
 }(this)); // end self executing function...
