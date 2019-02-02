@@ -55,7 +55,7 @@ function recurseSrcDirectories (grunt, fileData, options) {
         }
 
         for (let j = 0, jMax = files.length; j < jMax; j++) {
-            matches.push(files[i].path);
+            matches.push(files[j].path);
         }
     }
 
