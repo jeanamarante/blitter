@@ -101,13 +101,15 @@ function writeBufferToDest (grunt, fileData, options, buffer) {
         throw new TypeError('dest must be a string.');
     }
 
-    // Wrap the buffer inside the parseBuffer method invocation.
-    let content = 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
+    let content = '';
 
-    // Append useObjectURLs invocation after parsing buffer.
+    // Prepend useObjectURLs invocation after parsing buffer.
     if (Boolean(options.useObjectURLs)) {
         content += 'BLITTER.useObjectURLs();';
     }
+
+    // Wrap the buffer inside the parseBuffer method invocation.
+    content = 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
 
     grunt.file.write(path.resolve(fileData.dest), content);
 }
