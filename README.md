@@ -15,9 +15,10 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 grunt.loadNpmTasks('blitter');
 ```
 
-&nbsp;
+&ensp;
 
 ## Task
+
 _Run this task with the_ `grunt blitter` _command._
 
 Task targets, files and options may be specified according to the Grunt [Configuring tasks](http://gruntjs.com/configuring-tasks) guide.
@@ -26,10 +27,7 @@ Task targets, files and options may be specified according to the Grunt [Configu
 
 ### Description
 
-blitter is a task that generates sprite sheets for websites. The goals for blitter are to:
-
-* Reduce the amount of HTTP/HTTPS requests for images.
-* Provide an easier way to work with sprites by not having to deal with CSS backgrounds.
+blitter is a task that helps reduce the amount of HTTP requests for images in websites, and provide an easier way to work with images by not having to deal with CSS backgrounds.
 
 &nbsp;
 
@@ -39,44 +37,55 @@ blitter is a task that generates sprite sheets for websites. The goals for blitt
 grunt.config.init({
     blitter: {
         distScript: {
-            dest: 'dist/js/blitter.min.js',
-            inline: false
+            dest: 'dist/vendor/blitter.min.js',
         },
         home: {
-            src: 'img/home/',
-            dest: 'pug/home/sprite-buffer.pug',
-            inline: true
-        },
-        blog: {
-            src: 'img/blog/',
-            dest: 'js/blog/sprite-buffer.js',
-            inline: false
+            src: ['media/img/blit/demo/'], // Must be directories.
+            dest: 'dist/vendor/demo-buffer.blit.js',
+            options: {
+                useObjectURLs: true
+            }
         }
     }
 });
 ```
 
-### distScript
+#### distScript
 
-Task reserved for the client-side script to be written in dest file. inline will wrap the Javascript inside a ```<script>``` tag. Good idea to use when trying to inline HTML in a template engine.
+Reserved target for declaring where the minified client-side script is written.
 
-### src
+#### options.useObjectURLs
+Type: `Boolean`  
+Default: `false`
 
-Path to directory where all image files will be recursively searched and merged into a single sprite buffer.
+More efficient handling of image data by creating an object URL for each data URI. Blobs are created only when using object URLs.
 
-Blitter only recognizes these file types: ```['.png', '.svg', '.gif', '.jpg', '.jpeg']```
+&ensp;
 
-### dest
+## Client-Side
 
-Path for file containing the sprite buffer.
+#### blit-id
 
-### inline
+blit-ids are declared as attributes inside ```<img>``` elements. They serve as references to the image data you want to render. File names without their extension are used as blit-ids. All file names must be unique, if not the image elements will render the image data tied to the blit-id that got stored first.
 
-If set to true, the sprite buffer will be wrapped around a ```<script>``` tag.
+```
+srcDir
+├─── menu
+│    │   menu-drop-down-icon.svg
+│    └─  menu-hamburger-icon.svg
+│
+├─── shape
+│    │   shape-triangle.svg
+│    └─  shape-rectangle.svg
+│
+└─── file-system
+     │   file-system-directory.svg
+     └─  file-system-file.svg
+```
 
-&nbsp;
+#### HTML Page
 
-### Client-Side Example
+Always load blitter after all of the img elements using blit-ids have been parsed. It's not a bad idea to load buffers before loading other scripts.
 
 ```html
 <html>
@@ -86,61 +95,42 @@ If set to true, the sprite buffer will be wrapped around a ```<script>``` tag.
 <body>
     <img blit-id="example-icon">
     <ul>
-        <li><img blit-id="computer-one"></li>
-        <li><img blit-id="computer-two"></li>
+        <li><img blit-id="example-sub-icon-one"></li>
+        <li><img blit-id="example-sub-icon-two"></li>
     </ul>
-
-    <!-- Declare blitter.js after all the img elements using blit-ids. -->
     <script src="js/blitter.min.js"></script>
-
-    <!-- Prior to loading sprites, call this method first if you want to use Object URLs. -->
-    <script> BLITTER.useObjectURLs(); </script>
-
-    <!-- Its a good idea to load sprites before declaring other js scripts. -->
-    <script src="js/sprite-buffer.js"></script>
+    <script src="js/demo-buffer.blit.js"></script>
 </body>
 </html>
 ```
 
-### blit-id
+&ensp;
 
-blit-ids are declared as attributes inside ```<img>``` tags. They serve as pointers to the frame you want to render. File names are used for blit-ids. For example, if you have a file in the src directory named example-icon.svg, the blit-id for that file will be example-icon.
+## API
 
-### BLITTER.hasBlob
+#### hasMIME
 
-Check if blob exists.
+_hasMIME (id: String) : Boolean_
 
-_hasBlob(id: String);_
+#### getMIME
 
-### BLITTER.hasImageData
+_getMIME (id: String) : String_
 
-Check if frame exists.
+#### hasBlob
 
-_hasImageData(id: String);_
+_hasBlob (id: String) : Boolean_
 
-### BLITTER.useObjectURLs
+#### getBlob
 
-Call this method to save memory on big apps.
+_getBlob (id: String) : Blob_
 
-_useObjectURLs();_
+#### hasImageData
 
-### BLITTER.loadSpriteBuffer
+_hasImageData(id: String) : Boolean_
 
-You should never call this method directly. All generated sprite buffers invoke this method by default.
+#### getImageData
 
-_loadSpriteBuffer(buffer: Object);_
-
-### BLITTER.getBlob
-
-Get the raw data of frames after load event fires. Blobs are only created when using object URLs.
-
-_getBlob(id: String);_
-
-### BLITTER.getImageData
-
-Get frames after load event fires.
-
-_getImageData(id: String);_
+_getImageData (id: String) : String_
 
 ```js
 var img = new Image();
@@ -150,3 +140,19 @@ img.setAttribute('src', data);
 
 document.body.appendChild(img);
 ```
+
+#### isUsingObjectURLs
+
+_isUsingObjectURLs () : Boolean_
+
+#### useObjectURLs
+
+_useObjectURLs ()_
+
+You should never call this method directly.
+
+#### parseBuffer
+
+_parseBuffer (buffer: Array)_
+
+You should never call this method directly.
