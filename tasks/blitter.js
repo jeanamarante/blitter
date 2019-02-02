@@ -30,32 +30,18 @@ function recurseSrcDirectories (grunt, fileData, options) {
     let matches = [];
 
     for (let i = 0, iMax = fileData.src.length; i < iMax; i++) {
-        let src = fileData.src[i];
-
-        if (typeof src !== 'string') {
-            throw new TypeError('src must be a string.');
-        }
-
-        src = path.resolve(src);
-
-        if (!grunt.file.isDir(src)) {
-            throw new Error(src + ' must be a directory.');
-        }
-
-        let files = [];
-
         try {
-            files = klaw(src, {
+            let files = klaw(fileData.src[i], {
                 nodir: true,
                 filter: canFilter,
                 traverseAll: true
             });
+
+            for (let j = 0, jMax = files.length; j < jMax; j++) {
+                matches.push(files[j].path);
+            }
         } catch (err) {
             throw err;
-        }
-
-        for (let j = 0, jMax = files.length; j < jMax; j++) {
-            matches.push(files[j].path);
         }
     }
 
@@ -97,10 +83,6 @@ function createBuffer (grunt, fileData, options, matches) {
  */
 
 function writeBufferToDest (grunt, fileData, options, buffer) {
-    if (typeof fileData.dest !== 'string') {
-        throw new TypeError('dest must be a string.');
-    }
-
     let content = '';
 
     // Prepend useObjectURLs invocation after parsing buffer.
@@ -129,8 +111,6 @@ function uglifyDistScript (grunt, fileData, options) {
 
     if (!grunt.file.isFile(distScriptPath)) {
         throw new Error('blitter.js must be a file in node_modules/blitter/dist/');
-    } else if (typeof fileData.dest !== 'string') {
-        throw new TypeError('dest must be a string.');
     }
 
     let result = require('uglify-es').minify(grunt.file.read(distScriptPath), { mangle: false });
