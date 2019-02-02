@@ -6,15 +6,14 @@ const DataURI = require('datauri');
 /**
  * Ignore everything except directories and image files.
  *
- * @function canIgnore
- * @param {String} file
- * @param {Object} stats
+ * @function canFilter
+ * @param {Object} data
  * @return {Boolean}
  * @api private
  */
 
-function canIgnore (file, stats) {
-    return !(stats.isDirectory() || isImage(file));
+function canFilter (data) {
+    return data.stats.isDirectory() || isImage(data.path);
 }
 
 /**
@@ -30,17 +29,33 @@ function canIgnore (file, stats) {
 function recurseSrcDirectories (grunt, fileData, options) {
     let matches = [];
 
-    for (let i = 0, max = fileData.src.length; i < max; i++) {
+    for (let i = 0, iMax = fileData.src.length; i < iMax; i++) {
         let src = fileData.src[i];
 
         if (typeof src !== 'string') {
-            throw new TypeError('src must be String.');
+            throw new TypeError('src must be a string.');
         }
 
-        src = path.resolve(task.data.src);
+        src = path.resolve(src);
 
         if (!grunt.file.isDir(src)) {
             throw new Error(src + ' must be a directory.');
+        }
+
+        let files = [];
+
+        try {
+            files = klaw(src, {
+                nodir: true,
+                filter: canFilter,
+                traverseAll: true
+            });
+        } catch (err) {
+            throw err;
+        }
+
+        for (let j = 0, jMax = files.length; j < jMax; j++) {
+            matches.push(files[i].path);
         }
     }
 
@@ -87,7 +102,7 @@ function writeBufferToDest (grunt, fileData, options, buffer) {
     }
 
     // Wrap the buffer inside the parseBuffer method invocation.
-    var content = 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
+    let content = 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
 
     // Append useObjectURLs invocation after parsing buffer.
     if (Boolean(options.useObjectURLs)) {
