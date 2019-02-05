@@ -29,9 +29,16 @@ function canFilter (data) {
 function recurseSrcDirectories (grunt, fileData, options) {
     let matches = [];
 
-    for (let i = 0, iMax = fileData.src.length; i < iMax; i++) {
+    for (let i = 0, iMax = fileData.orig.src.length; i < iMax; i++) {
+        let src = fileData.orig.src[i];
+        let resolvedSrc = path.resolve(src);
+
+        if (!grunt.file.isDir(resolvedSrc)) {
+            throw new Error(src + ' must be directory.');
+        }
+
         try {
-            let files = klaw(fileData.src[i], {
+            let files = klaw(resolvedSrc, {
                 nodir: true,
                 filter: canFilter,
                 traverseAll: true
