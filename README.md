@@ -39,7 +39,7 @@ grunt.config.init({
         distScript: {
             dest: 'dist/vendor/blitter.min.js',
         },
-        home: {
+        demo: {
             src: ['media/img/blit/demo/'], // Must be directories.
             dest: 'dist/vendor/demo-buffer.blit.js',
             options: {
@@ -111,37 +111,37 @@ Always load blitter after all of the img elements using blit-ids have been parse
 __hasMIME__
 
 ```js
-hasMIME (id: String) : Boolean
+BLITTER.hasMIME (id: String) : Boolean
 ```
 
 __getMIME__
 
 ```js
-getMIME (id: String) : String
+BLITTER.getMIME (id: String) : String
 ```
 
 __hasBlob__
 
 ```js
-hasBlob (id: String) : Boolean
+BLITTER.hasBlob (id: String) : Boolean
 ```
 
 __getBlob__
 
 ```js
-getBlob (id: String) : Blob
+BLITTER.getBlob (id: String) : Blob
 ```
 
 __hasImageData__
 
 ```js
-hasImageData (id: String) : Boolean
+BLITTER.hasImageData (id: String) : Boolean
 ```
 
 __getImageData__
 
 ```js
-getImageData (id: String) : String
+BLITTER.getImageData (id: String) : String
 
 // Example
 let img = new Image();
@@ -154,19 +154,19 @@ document.body.appendChild(img);
 __isUsingObjectURLs__
 
 ```js
-isUsingObjectURLs () : Boolean
+BLITTER.isUsingObjectURLs () : Boolean
 ```
 
 __useObjectURLs__
 
 ```js
 // You should never call this method directly.
-useObjectURLs ()
+BLITTER.useObjectURLs ()
 ```
 
 __parseBuffer__
 
 ```js
 // You should never call this method directly.
-parseBuffer (buffer: Array)
+BLITTER.parseBuffer (buffer: Array)
 ```
