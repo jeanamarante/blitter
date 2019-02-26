@@ -1,3 +1,5 @@
+'use strict';
+
 const path = require('path');
 const klaw = require('klaw-sync');
 const isImage = require('is-image');
