@@ -89,7 +89,7 @@ function storeFrame (node) {
     }
 
     // Setting an empty png as src prevents default borders from rendering while loading the page.
-    node.src = emptyPNG;
+    node.setAttribute('src', emptyPNG);
 }
 
 /**
@@ -159,13 +159,13 @@ function attachImageDataToFrames (id) {
     let data = imageDataRegistry[id];
 
     for (let i = 0, max = nodes.length; i < max; i++) {
-        nodes[i].src = data;
+        nodes[i].setAttribute('src', data);
     }
 
     delete frameRegistry[id];
 }
 
-window.BLITTER = {
+window['BLITTER'] = {
     /**
      * @function hasMIME
      * @param {String} id
@@ -173,7 +173,7 @@ window.BLITTER = {
      * @api public
      */
 
-    hasMIME: function (id) {
+    'hasMIME': function (id) {
         return hasMIME(id);
     },
 
@@ -184,7 +184,7 @@ window.BLITTER = {
      * @api public
      */
 
-    getMIME: function (id) {
+    'getMIME': function (id) {
         return hasMIME(id) ? mimeRegistry[id] : '';
     },
 
@@ -195,7 +195,7 @@ window.BLITTER = {
      * @api public
      */
 
-    hasBlob: function (id) {
+    'hasBlob': function (id) {
         return hasBlob(id);
     },
 
@@ -206,7 +206,7 @@ window.BLITTER = {
      * @api public
      */
 
-    getBlob: function (id) {
+    'getBlob': function (id) {
         return hasBlob(id) ? blobRegistry[id] : null;
     },
 
@@ -217,7 +217,7 @@ window.BLITTER = {
      * @api public
      */
 
-    hasImageData: function (id) {
+    'hasImageData': function (id) {
         return hasImageData(id);
     },
 
@@ -228,7 +228,7 @@ window.BLITTER = {
      * @api public
      */
 
-    getImageData: function (id) {
+    'getImageData': function (id) {
         return hasImageData(id) ? imageDataRegistry[id] : emptyPNG;
     },
 
@@ -238,7 +238,7 @@ window.BLITTER = {
      * @api public
      */
 
-    isUsingObjectURLs: function () {
+    'isUsingObjectURLs': function () {
         return usingObjectURLs;
     },
 
@@ -247,7 +247,7 @@ window.BLITTER = {
      * @api public
      */
 
-    useObjectURLs: function () {
+    'useObjectURLs': function () {
         if (usingObjectURLs) { return undefined; }
 
         usingObjectURLs = true;
@@ -261,7 +261,7 @@ window.BLITTER = {
      * @api public
      */
 
-    parseBuffer: function (buffer) {
+    'parseBuffer': function (buffer) {
         for (let i = 0, max = buffer.length; i < max; i += 3) {
             let id = buffer[i];
             let mime = buffer[i + 1];
