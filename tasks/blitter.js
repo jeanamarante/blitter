@@ -1,25 +1,51 @@
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
-const klaw = require('klaw-sync');
 const isImage = require('is-image');
+const readDir = require('recursive-readdir');
 const DataURI = require('datauri');
+
+// This task relies on async functionality.
+let asyncDone = null;
 
 /**
  * Ignore everything except directories and image files.
  *
- * @function canFilter
- * @param {Object} data
+ * @function canIgnore
+ * @param {String} path
+ * @param {Stats} stats
  * @return {Boolean}
  * @api private
  */
 
-function canFilter (data) {
-    return data.stats.isDirectory() || isImage(data.path);
+function canIgnore (path, stats) {
+    return !(stats.isDirectory() || isImage(path));
 }
 
 /**
- * Match all image files in src directories.
+ * @function resolveSrc
+ * @param {Array} arr
+ * @return {Array}
+ * @api private
+ */
+
+function resolveSrc (grunt, arr) {
+    var resolvedArr = [];
+
+    for (var i = 0, max = arr.length; i < max; i++) {
+        resolvedArr[i] = path.resolve(arr[i]);
+
+        if (!grunt.file.isDir(resolvedArr[i])) {
+            throw new Error(arr[i] + ' must be directory in src.');
+        }
+    }
+
+    return resolvedArr;
+}
+
+/**
+ * Find all image files in src directories.
  *
  * @function recurseSrcDirectories
  * @param {Object} grunt
@@ -29,36 +55,36 @@ function canFilter (data) {
  */
 
 function recurseSrcDirectories (grunt, fileData, options) {
-    let matches = [];
+    let src = [];
 
-    for (let i = 0, iMax = fileData.orig.src.length; i < iMax; i++) {
-        let src = fileData.orig.src[i];
-        let resolvedSrc = path.resolve(src);
+    try {
+        src = resolveSrc(grunt, fileData.orig.src);
+    } catch (err) {
+        asyncDone(err);
 
-        if (!grunt.file.isDir(resolvedSrc)) {
-            throw new Error(src + ' must be directory.');
-        }
-
-        try {
-            let files = klaw(resolvedSrc, {
-                nodir: true,
-                filter: canFilter,
-                traverseAll: true
-            });
-
-            for (let j = 0, jMax = files.length; j < jMax; j++) {
-                matches.push(files[j].path);
-            }
-        } catch (err) {
-            throw err;
-        }
+        throw err;
     }
 
-    createBuffer(grunt, fileData, options, matches);
+    let promises = [];
+
+    for (let i = 0, max = src.length; i < max; i++) {
+        let promise = readDir(src[i], [canIgnore]).then(value => value, err => err);
+
+        promises.push(promise);
+    }
+
+    Promise.all(promises)
+        .then(values => {
+            streamBuffer(grunt, fileData, options, values);
+        }, err => {
+            asyncDone(err);
+
+            throw err;
+        });
 }
 
 /**
- * Create data URIs from all image files and push them inside the buffer
+ * Create data URIs from all image files and stream them into dest file
  * with their respective id and MIME.
  *
  * @function createBuffer
@@ -69,80 +95,26 @@ function recurseSrcDirectories (grunt, fileData, options) {
  * @api private
  */
 
-function createBuffer (grunt, fileData, options, matches) {
-    let buffer = [];
-
-    for (let i = 0, max = matches.length; i < max; i++) {
-        let match = matches[i];
-        let uri = new DataURI(match);
-
-        buffer.push(path.parse(match).name, uri.mimetype, uri.content);
-    }
-
-    writeBufferToDest(grunt, fileData, options, buffer);
-}
-
-/**
- * @function writeBufferToDest
- * @param {Object} grunt
- * @param {Object} fileData
- * @param {Object} options
- * @param {Array} buffer
- * @api private
- */
-
-function writeBufferToDest (grunt, fileData, options, buffer) {
-    let content = '';
-
-    // Prepend useObjectURLs invocation after parsing buffer.
-    if (Boolean(options.useObjectURLs)) {
-        content += 'BLITTER.useObjectURLs();';
-    }
-
-    // Wrap the buffer inside the parseBuffer invocation.
-    content += 'BLITTER.parseBuffer(' + JSON.stringify(buffer) + ');';
-
-    grunt.file.write(path.resolve(fileData.dest), content);
-}
-
-/**
- * Read dist script and uglify it to dest.
- *
- * @function uglifyDistScript
- * @param {Object} grunt
- * @param {Object} fileData
- * @param {Object} options
- * @api public
- */
-
-function uglifyDistScript (grunt, fileData, options) {
-    let distScriptPath = path.resolve(__dirname, '../dist/blitter.js');
-
-    if (!grunt.file.isFile(distScriptPath)) {
-        throw new Error('blitter.js must be a file in node_modules/blitter/dist/');
-    }
-
-    let result = require('uglify-es').minify(grunt.file.read(distScriptPath), { mangle: false });
-
-    if (result.error !== undefined) {
-        throw result.error;
-    } else {
-        grunt.file.write(path.resolve(fileData.dest), result.code);
-    }
+function streamBuffer (grunt, fileData, options, matches) {
+    let dest = path.resolve(fileData.dest);
+    let writable = fs.createWriteStream(dest);
 }
 
 module.exports = function (grunt) {
     grunt.registerMultiTask('blitter', function () {
         let options = this.options();
 
-        if (this.target === 'distScript') {
-            for (let i = 0, max = this.files.length; i < max; i++) {
-                uglifyDistScript(grunt, this.files[i], options);
-            }
+        // Execute task asynchronously.
+        asyncDone = grunt.task.current.async();
+
+        if (options.useObjectURLs === undefined) {
+            options.useObjectURLs = true;
         } else {
-            for (let i = 0, max = this.files.length; i < max; i++) {
-                recurseSrcDirectories(grunt, this.files[i], options);
-            }
+            options.useObjectURLs = Boolean(options.useObjectURLs);
+        }
+
+        for (let i = 0, max = this.files.length; i < max; i++) {
+            recurseSrcDirectories(grunt, this.files[i], options);
         }
     });
 };
