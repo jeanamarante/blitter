@@ -7,20 +7,20 @@ let emptyPNG = 'data:image/png;base64,R0lGODlhFAAUAIAAAP///wAAACH5BAEAAAAALAAAAA
 // Queue frame ids depending on the order they are found in the DOM.
 let idQueue = [];
 
-// Store frames.
-let frameRegistry = {};
-
-// Store MIMEs.
-let mimeRegistry = {};
-
-// Store image data.
-let imageDataRegistry = {};
-
-// Store blobs.
-let blobRegistry = {};
-
 // Reference image data as ObjectURLs?
 let usingObjectURLs = false;
+
+// Store frames.
+const frameRegistry = {};
+
+// Store MIMEs.
+const mimeRegistry = {};
+
+// Store image data.
+const imageDataRegistry = {};
+
+// Store blobs.
+const blobRegistry = {};
 
 /**
  * @function hasMIME
