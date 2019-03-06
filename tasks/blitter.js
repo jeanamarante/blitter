@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const mime = require('mime');
 const isImage = require('is-image');
 const readDir = require('recursive-readdir');
 const DataURI = require('datauri');
@@ -10,38 +11,37 @@ const DataURI = require('datauri');
 let asyncDone = null;
 
 /**
- * Ignore everything except directories and image files.
- *
- * @function canIgnore
- * @param {String} path
- * @param {Stats} stats
- * @return {Boolean}
+ * @function testOriginalSrc
+ * @param {Object} grunt
+ * @param {Array} src
  * @api private
  */
 
-function canIgnore (path, stats) {
-    return !(stats.isDirectory() || isImage(path));
+function testOriginalSrc (grunt, src) {
+    for (let i = 0, max = src.length; i < max; i++) {
+        let item = src[i];
+
+        if (typeof item !== 'string') {
+            throw new Error('src must be string.');
+        } else if (!grunt.file.isDir(path.resolve(item))) {
+            throw new Error(item + ' must be directory in src.');
+        }
+    }
 }
 
 /**
- * @function resolveSrc
- * @param {Array} arr
- * @return {Array}
+ * @function testDest
+ * @param {Object} grunt
+ * @param {String} dest
  * @api private
  */
 
-function resolveSrc (grunt, arr) {
-    var resolvedArr = [];
-
-    for (var i = 0, max = arr.length; i < max; i++) {
-        resolvedArr[i] = path.resolve(arr[i]);
-
-        if (!grunt.file.isDir(resolvedArr[i])) {
-            throw new Error(arr[i] + ' must be directory in src.');
-        }
+function testDest (grunt, dest) {
+    if (typeof dest !== 'string') {
+        throw new Error('dest must be string.');
+    } else if (grunt.file.isDir(path.resolve(dest))) {
+        throw new Error('dest cannot be directory.');
     }
-
-    return resolvedArr;
 }
 
 /**
@@ -55,27 +55,20 @@ function resolveSrc (grunt, arr) {
  */
 
 function recurseSrcDirectories (grunt, fileData, options) {
-    let src = [];
-
-    try {
-        src = resolveSrc(grunt, fileData.orig.src);
-    } catch (err) {
-        asyncDone(err);
-
-        throw err;
-    }
-
+    let src = fileData.orig.src.map(item => path.resolve(item));
     let promises = [];
 
-    for (let i = 0, max = src.length; i < max; i++) {
-        let promise = readDir(src[i], [canIgnore]).then(value => value, err => err);
+    // Ignore everything except directories and image files.
+    // Store function in array for recursive-readdir module.
+    let ignoreCallback = [(path, stats) => !(stats.isDirectory() || isImage(path))];
 
-        promises.push(promise);
+    for (let i = 0, max = src.length; i < max; i++) {
+        promises.push(readDir(src[i], ignoreCallback).then(value => value, err => err));
     }
 
     Promise.all(promises)
         .then(values => {
-            streamBuffer(grunt, fileData, options, values);
+            streamToDest(grunt, fileData, options, values.flat());
         }, err => {
             asyncDone(err);
 
@@ -84,10 +77,10 @@ function recurseSrcDirectories (grunt, fileData, options) {
 }
 
 /**
- * Create data URIs from all image files and stream them into dest file
- * with their respective id and MIME.
+ * Stream data URIs from matched image files into dest file with their
+ * respective id and MIME.
  *
- * @function createBuffer
+ * @function streamToDest
  * @param {Object} grunt
  * @param {Object} fileData
  * @param {Object} options
@@ -95,17 +88,74 @@ function recurseSrcDirectories (grunt, fileData, options) {
  * @api private
  */
 
-function streamBuffer (grunt, fileData, options, matches) {
-    let dest = path.resolve(fileData.dest);
-    let writable = fs.createWriteStream(dest);
+function streamToDest (grunt, fileData, options, matches) {
+    let writable = fs.createWriteStream(path.resolve(fileData.dest));
+
+    // Always prepend useObjectURLs invocation before parseBuffer invocation.
+    let data = options.useObjectURLs ? 'BLITTER.useObjectURLs();' : '';
+
+    // Start parseBuffer wrap.
+    data += 'BLITTER.parseBuffer([';
+
+    try {
+        writable.write(data, 'utf8', () => {
+            streamBuffer(grunt, matches, writable);
+        });
+    } catch (err) {
+        asyncDone(err);
+
+        throw err;
+    }
+}
+
+/**
+ * Stream the buffer recursively inside the parseBuffer invocation.
+ *
+ * @function streamBuffer
+ * @param {Object} grunt
+ * @param {Array} matches
+ * @param {WriteStream} writable
+ * @api private
+ */
+
+function streamBuffer (grunt, matches, writable) {
+    let match = matches.pop();
+
+    if (match === undefined) {
+        // End parseBuffer wrap.
+        writable.end(']);', 'utf8', () => {
+            asyncDone(true);
+        });
+    } else {
+        // Start DataURI wrap.
+        let data = '"' + path.parse(match).name + '","' + mime.getType(match) + '","';
+
+        writable.write(data, 'utf8', () => {
+            let data = new DataURI();
+
+            // Everytime readable stream finishes piping all data to the
+            // writable stream move on to next matched file.
+            data.on('end', () => {
+                // End DataURI wrap.
+                let data = matches.length === 0 ? '"' : '",';
+
+                writable.write(data, 'utf8', () => {
+                    streamBuffer(grunt, matches, writable);
+                });
+            });
+
+            data.pipe(writable, { end: false });
+            data.encode(match);
+        });
+    }
 }
 
 module.exports = function (grunt) {
     grunt.registerMultiTask('blitter', function () {
-        let options = this.options();
-
         // Execute task asynchronously.
         asyncDone = grunt.task.current.async();
+
+        let options = this.options();
 
         if (options.useObjectURLs === undefined) {
             options.useObjectURLs = true;
@@ -114,7 +164,18 @@ module.exports = function (grunt) {
         }
 
         for (let i = 0, max = this.files.length; i < max; i++) {
-            recurseSrcDirectories(grunt, this.files[i], options);
+            let fileData = this.files[i];
+
+            try {
+                testOriginalSrc(grunt, fileData.orig.src);
+                testDest(grunt, fileData.dest);
+            } catch (err) {
+                asyncDone(err);
+
+                throw err;
+            }
+
+            recurseSrcDirectories(grunt, fileData, options);
         }
     });
 };
