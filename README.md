@@ -36,33 +36,25 @@ blitter is a task that helps reduce the amount of HTTP requests for images in we
 ```js
 grunt.config.init({
     blitter: {
-        distScript: {
-            dest: 'dist/vendor/blitter.min.js',
-        },
         demo: {
             src: ['media/img/blit/demo/'], // Must be directories.
-            dest: 'dist/vendor/demo-buffer.blit.js',
-            options: {
-                useObjectURLs: true
-            }
+            dest: 'dist/vendor/demo-buffer.blit.js'
         }
     }
 });
 ```
 
-__distScript__
-
-Reserved target for declaring where the minified client-side script is written.
-
 __options.useObjectURLs__  
 Type: `Boolean`  
-Default: `false`
+Default: `true`
 
 More efficient handling of image data by creating an object URL for each data URI. Blobs are created only when using object URLs.
 
 &nbsp;
 
 ## Client-Side
+
+You can download the latest client-side script [here](https://github.com/jeanamarante/blitter/releases).
 
 __blit-id__
 
