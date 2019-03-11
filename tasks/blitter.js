@@ -75,7 +75,7 @@ function recurseSrcDirectories (grunt, fileData, options) {
 
     // Ignore everything except directories and image files.
     // Store function in array for recursive-readdir module.
-    let ignoreCallback = [(path, stats) => !(stats.isDirectory() || isImage(path))];
+    let ignoreCallback = [(file, stats) => !(stats.isDirectory() || isImage(file))];
 
     for (let i = 0, max = src.length; i < max; i++) {
         promises.push(readDir(src[i], ignoreCallback).then((value) => value, (err) => err));
