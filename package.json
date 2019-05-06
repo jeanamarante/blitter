@@ -1,7 +1,7 @@
 {
     "name": "blitter",
     "description": "Sprite Sheet Helper for the Web",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "author": {
         "name": "Jean Amarante",
         "url": "https://github.com/jeanamarante"
@@ -15,7 +15,7 @@
     },
     "license": "MIT",
     "engines": {
-        "node": ">=0.10.0"
+        "node": ">=11.8.0"
     },
     "dependencies": {
         "mime": "^2.4.0",
