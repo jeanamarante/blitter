@@ -14,9 +14,6 @@
         "url": "https://github.com/jeanamarante/blitter/issues"
     },
     "license": "MIT",
-    "engines": {
-        "node": ">=11.8.0"
-    },
     "dependencies": {
         "mime": "^2.4.0",
         "grunt": "^1.0.0",
