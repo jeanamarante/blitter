@@ -19,7 +19,8 @@
         "grunt": "^1.0.0",
         "is-image": "^2.0.0",
         "base64-stream": "^1.0.0",
-        "recursive-readdir": "^2.2.0"
+        "recursive-readdir": "^2.2.0",
+        "array-flat-polyfill": "^1.0.0"
     },
     "devDependencies": {
         "uglify-es": "^3.3.0"

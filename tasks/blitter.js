@@ -1,5 +1,8 @@
 'use strict';
 
+// Array.prototype.flat method does not work in older versions of node.
+require('array-flat-polyfill');
+
 const path = require('path');
 const isImage = require('is-image');
 const readDir = require('recursive-readdir');
