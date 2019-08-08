@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
-const {Base64Encode} = require('base64-stream');
+const { Base64Encode } = require('base64-stream');
 
 let asyncDone = null;
 let throwAsyncError = null;
